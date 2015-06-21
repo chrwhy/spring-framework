@@ -29,13 +29,13 @@ import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.aop.Advisor;
 import org.springframework.aop.AopInvocationException;
 import org.springframework.aop.PointcutAdvisor;
 import org.springframework.aop.RawTargetAccess;
 import org.springframework.aop.TargetSource;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.art.ART;
 import org.springframework.cglib.core.CodeGenerationException;
 import org.springframework.cglib.core.SpringNamingPolicy;
 import org.springframework.cglib.proxy.Callback;
@@ -612,6 +612,8 @@ class CglibAopProxy implements AopProxy, Serializable {
 
 		@Override
 		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+			long t1 = System.currentTimeMillis();
+
 			Object oldProxy = null;
 			boolean setProxyContext = false;
 			Class<?> targetClass = null;
@@ -644,8 +646,15 @@ class CglibAopProxy implements AopProxy, Serializable {
 					retVal = new CglibMethodInvocation(proxy, target, method, args, targetClass, chain, methodProxy).proceed();
 				}
 				retVal = processReturnType(proxy, target, method, retVal);
+
+				long t2 = System.currentTimeMillis();
+				if(null != method.getAnnotation(ART.class)){
+					logger.info("ART cost: " + (t2 - t1) + " ms.");
+				}
+
 				return retVal;
 			}
+
 			finally {
 				if (target != null) {
 					releaseTarget(target);
